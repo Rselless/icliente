@@ -1,5 +1,10 @@
-import { Module } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Module,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
@@ -31,6 +36,9 @@ function databaseConfig() {
     ProdutoModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [
+    { provide: APP_PIPE, useValue: new ValidationPipe({ transform: true }) },
+    { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
+  ],
 })
 export class AppModule {}
