@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 
 @Injectable()
@@ -13,7 +12,8 @@ export class ProdService implements TypeOrmOptionsFactory {
       ssl: {
         rejectUnauthorized: false,
       },
-      synchronize: true,
+      // Em produção o schema só é sincronizado se DB_SYNCHRONIZE=true.
+      synchronize: process.env.DB_SYNCHRONIZE === 'true',
       autoLoadEntities: true,
     };
   }
