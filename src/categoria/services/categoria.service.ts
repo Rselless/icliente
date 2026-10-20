@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, ILike, Repository } from 'typeorm';
 import { Categoria } from '../entities/categoria.entity';
@@ -53,8 +58,16 @@ export class CategoriaService {
     return await this.categoriaRepository.save(categoria);
   }
 
+  // Apagar a categoria apagaria em cascata os produtos de todos os usuários,
+  // então só é permitido quando ela está vazia.
   async delete(id: number): Promise<DeleteResult> {
-    await this.findById(id);
+    const categoria = await this.findById(id);
+
+    if (categoria.produto?.length)
+      throw new ConflictException(
+        'Não é possível apagar uma categoria que ainda tem produtos!',
+      );
+
     return await this.categoriaRepository.delete(id);
   }
 }

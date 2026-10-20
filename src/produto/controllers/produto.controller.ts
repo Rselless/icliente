@@ -2,6 +2,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
 import { Produto } from '../entities/produto.entity';
 import { ProdutoService } from './../services/produto.service';
+import { RequisicaoAutenticada } from '../../auth/types/usuario-autenticado';
 import {
   Body,
   Controller,
@@ -13,6 +14,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 
@@ -45,19 +47,28 @@ export class ProdutoController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() produto: Produto): Promise<Produto> {
-    return this.produtoService.create(produto);
+  create(
+    @Body() produto: Produto,
+    @Request() req: RequisicaoAutenticada,
+  ): Promise<Produto> {
+    return this.produtoService.create(produto, req.user.id);
   }
 
   @Put()
   @HttpCode(HttpStatus.OK)
-  update(@Body() produto: Produto): Promise<Produto> {
-    return this.produtoService.update(produto);
+  update(
+    @Body() produto: Produto,
+    @Request() req: RequisicaoAutenticada,
+  ): Promise<Produto> {
+    return this.produtoService.update(produto, req.user.id);
   }
 
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param('id', ParseIntPipe) id: number) {
-    return this.produtoService.delete(id);
+  delete(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: RequisicaoAutenticada,
+  ) {
+    return this.produtoService.delete(id, req.user.id);
   }
 }
