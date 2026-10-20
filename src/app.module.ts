@@ -5,16 +5,24 @@ import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { UsuarioModule } from './usuario/usuario.module';
 import { CategoriaModule } from './categoria/categoria.module';
-//import { DevService } from './data/services/dev.service';
 import { ProdutoModule } from './produto/produto.module';
+import { DevService } from './data/services/dev.service';
 import { ProdService } from './data/services/prod.service';
+import { TestService } from './data/services/test.service';
+
+// Testes usam sqlite em memória; com DATABASE_URL usa o Postgres de
+// produção; sem ela, o MySQL local de desenvolvimento.
+function databaseConfig() {
+  if (process.env.NODE_ENV === 'test') return TestService;
+  if (process.env.DATABASE_URL) return ProdService;
+  return DevService;
+}
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     TypeOrmModule.forRootAsync({
-      //useClass: DevService,  //-> usar em desenvolvimento
-      useClass: ProdService, //-> usar em produção
+      useClass: databaseConfig(),
       imports: [ConfigModule],
     }),
     CategoriaModule,
