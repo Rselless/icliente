@@ -1,8 +1,8 @@
 import { JwtService } from '@nestjs/jwt';
 import { UsuarioService } from './../../usuario/services/usuario.service';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Bcrypt } from '../bcrypt/bcrypt';
-import { UsuarioLogin } from '../entities/usuariologin.entity';
+import { Usuario } from '../../usuario/entities/usuario.entity';
 
 @Injectable()
 export class AuthService {
@@ -12,42 +12,32 @@ export class AuthService {
     private bcrypt: Bcrypt,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<any> {
+  // Retorna null tanto para e-mail inexistente quanto para senha errada,
+  // para não revelar quais e-mails estão cadastrados.
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<Usuario | null> {
     const buscaUsuario = await this.usuarioService.findByUsuario(username);
-
-    if (!buscaUsuario)
-      throw new HttpException('Usuário não encontrado!', HttpStatus.NOT_FOUND);
+    if (!buscaUsuario) return null;
 
     const matchPassword = await this.bcrypt.compararSenhas(
       password,
       buscaUsuario.senha,
     );
 
-    if (buscaUsuario && matchPassword) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { senha, ...resposta } = buscaUsuario;
-      return resposta;
-    }
-
-    return null;
+    return matchPassword ? buscaUsuario : null;
   }
 
-  async login(usuarioLogin: UsuarioLogin) {
-    const payload = { sub: usuarioLogin.usuario };
-
-    const buscaUsuario = await this.usuarioService.findByUsuario(
-      usuarioLogin.usuario,
-    );
-
-    if (!buscaUsuario)
-      throw new HttpException('Usuário e/ou senha incorretos!', HttpStatus.NOT_FOUND);
+  login(usuario: Usuario) {
+    const payload = { sub: usuario.id, usuario: usuario.usuario };
 
     return {
-      id: buscaUsuario.id,
-      nome: buscaUsuario.nome,
-      usuario: usuarioLogin.usuario,
+      id: usuario.id,
+      nome: usuario.nome,
+      usuario: usuario.usuario,
       senha: '',
-      foto: buscaUsuario.foto,
+      foto: usuario.foto,
       token: `Bearer ${this.jwtService.sign(payload)}`,
     };
   }

@@ -20,7 +20,7 @@ function databaseConfig() {
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       useClass: databaseConfig(),
       imports: [ConfigModule],

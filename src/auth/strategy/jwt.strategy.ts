@@ -1,21 +1,25 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { jwtConstants } from '../constants/constants';
+import { UsuarioAutenticado } from '../types/usuario-autenticado';
+
+interface PayloadJwt {
+  sub: number;
+  usuario: string;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwtConstants.secret,
+      secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async validate(payload: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return payload;
+  validate(payload: PayloadJwt): UsuarioAutenticado {
+    return { id: payload.sub, usuario: payload.usuario };
   }
 }
